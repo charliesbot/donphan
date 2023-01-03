@@ -1,0 +1,22 @@
+{
+  "name": "donphan-oauth-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "setup": "npm run vercel login && npm run vercel link",
+    "start": "npx vercel dev --listen 8080",
+    "dev": "npm run start"
+  },
+  "author": "charliesbot",
+  "dependencies": {
+    "@types/simple-oauth2": "^4.1.1",
+    "@vercel/node": "^2.5.2",
+    "micro": "^9.4.0",
+    "simple-oauth2": "^4.3.0",
+    "vercel": "^25.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.7"
+  }
+}
