@@ -11,7 +11,7 @@ This is required. Otherwise, the call to the endpoint fails.
 curl -X POST 'https://{your_mastodon_server}/v1/statuses/' \
   -H "Accept: application/json" \
   -H "Authorization: Bearer {authorization_token}" \
-  -F "status"="First toot con Donphan!"
+  -F "status"="Primer toot con Donphan!"
 ```
 
 ## Setup OAUTH Server
@@ -83,7 +83,7 @@ export default async (_: VercelRequest, response: VercelResponse) => {
 
 ### Oauth Authorization
 Once we have an authentication code, it is required to convert the token to an authorization code.
-The authorization token allow the app to make actual requests to Mastodon's API.
+The authorization token allows the app to make actual requests to Mastodon's API.
 
 ```typescript
 import type {VercelRequest, VercelResponse} from "@vercel/node";
