@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "setup": "npm run vercel login && npm run vercel link",
+    "setup": "npx vercel login && npx vercel link",
     "start": "npx vercel dev --listen 8080",
     "dev": "npm run start"
   },
