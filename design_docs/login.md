@@ -1,109 +1,127 @@
-# Login Config for Mastodon
+# Login
 
-## Create Mastodon Application
-https://{your_mastodon_server}/settings/applications/new
+## Other Links
+- [OAuth Config for Mastodon design doc](https://github.com/charliesbot/donphan/blob/main/design_docs/oauth.md)
 
-## Test Auth Token
-*Heads Up!* Notice the slash after **statuses**. 
-This is required. Otherwise, the call to the endpoint fails.
+## Login flow
+Mastodon relies on the Fediverse, which means that every instance of the platform can see each other.
 
-```curl
-curl -X POST 'https://{your_mastodon_server}/v1/statuses/' \
-  -H "Accept: application/json" \
-  -H "Authorization: Bearer {authorization_token}" \
-  -F "status"="Primer toot con Donphan!"
-```
+Therefore, we need to know beforehand the server where the user has a Mastodon account created.
 
-## Setup OAUTH Server
+## OAuth Flow
+The OAuth process is described in the [OAuth Config for Mastodon design doc](https://github.com/charliesbot/donphan/blob/main/design_docs/oauth.md).
 
-Vercel lambdas are quite flexible (and cheap), so the Oauth config can rely on their servers.
+The OAuth flow involves opening a browser and redirect to Donphan OAuth Server to complete authentication.
 
-By using [simple-oauth2](https://github.com/lelylan/simple-oauth2), the OAUTH process is quite simple.
+There are several ways to accomplish this goal.
 
-## Oauth Process
+## In App Browser
+Login must happens in a web browser.
+After the user sets the server where it account belongs, we start the OAuth process.
 
-### Setup Config Builder to reuse across authentication and authorization Oauth phases
+If the authentication is successful, we redirect to Donphan by using [deep linking](https://developer.android.com/training/app-links/deep-linking).
 
+There are multiple ways to setup the InApp Browser.
+
+### Web View
+A Web View is an embedded browser inside the app. It is not secure, as developers can track the navigation and urls.
+This also means the web view is just a fresh instance of a browser: if the user already logged in in the past, we lose those cookies and the user needs to logged in again before authorizing the app.
+
+| Pros ✅ | ❌ |
+|:--|:--|
+| We have access to the URL (if needed) | Users need to login before authorization |
+| App can get the auth token by reading the url or using deep linking | Insecure and not private |
+
+### Custom Tabs / Safari Web View (chosen)
+Android and iOS provides secure instances of the default browser, which means we can get a web view with cookies and storage from the user's browser.
+
+Therefore, if the user previously logged in to their Mastodon's instance using their browser, the authorization page will appear instantly.
+
+Because of this data, the data access as a developer is way more limited to keep privacy and security in mind.
+This force the app to rely on deep linking to get the authorization token.
+
+| Pros ✅ | ❌ |
+|:--|:--|
+| If the user already logged in, the auth page appears immediately | No access to urls |
+| Secure by default: it might encourage confidence to the user |  |
+
+## Implementation Details
+[Expo offers a web view library](https://docs.expo.dev/versions/latest/sdk/webbrowser) that uses Chrome Tabs in Android and Safari Web View in iOS, which is required for our solution.
+
+### Installation
+`npx expo install expo-web-browser`
+
+### Usage
 ```typescript
-// MastodonConfigBuilder.ts
-
-class MastodonConfigBuilder {
-  static build = (mastodonServerUrl: string) => {
-    return {
-      baseConfig: {
-        redirect_uri: "urn:ietf:wg:oauth:2.0:oob",
-        scope: "read write follow push",
-      },
-      clientConfig: {
-        client: {
-          id: process.env.CLIENT_ID,
-          secret: process.env.CLIENT_SECRET,
-        },
-        auth: {
-          authorizeHost: `${mastodonServerUrl}/v3/oauth/authorize`,
-          authorizePath: `${mastodonServerUrl}/v3/oauth/authorize`,
-          tokenHost: `${mastodonServerUrl}/v3/oauth/token`,
-          tokenPath: `${mastodonServerUrl}/v3/oauth/token`,
-        },
-      },
-    };
+  import * as WebBrowser from 'expo-web-browser';
+  // ...rest of the code
+  
+  const onOpenOAuth = async () => {
+    await WebBrowser.openBrowserAsync('https://donphan-oauth.vercel.app/api/oauth');
   };
-}
-
-export { MastodonConfigBuilder };
-
-```
-This function can be used as follows: 
-`MastodonConfigBuilder.build("{mastodon_server_url}");`
-
-### Oauth Authentication
-- (Vercel Serverless Functions)[https://vercel.com/docs/concepts/functions/serverless-functions]
-allow us to create a simple function for free that is alive only when it is triggered.
-- Simple Oauth 2 library handles the handshake process, so we just need to build the required config.
-- A successful handshake returns an Authentication Token
-
-```typescript
-// oauth.ts
-import type {VercelRequest, VercelResponse} from "@vercel/node";
-import {AuthorizationCode} from "simple-oauth2";
-import { MastodonConfigBuilder } from "utils";
-
-export default async (_: VercelRequest, response: VercelResponse) => {
-  const config = MastodonConfigBuilder.build(mastodonServerUrl);
-  const client = new AuthorizationCode(config.clientConfig);
-
-  const authorizationUri = client.authorizeURL({
-    ...config.baseConfig,
-    state: 'pseudo-random',
-  });
-
-  response.status(301).redirect(authorizationUri);
-};
 ```
 
-### Oauth Authorization
-Once we have an authentication code, it is required to convert the token to an authorization code.
-The authorization token allows the app to make actual requests to Mastodon's API.
+### Deep Linking
+Once the OAuth flow completes, the server will call Donphan's app url.
 
-```typescript
-import type {VercelRequest, VercelResponse} from "@vercel/node";
-import {AuthorizationCode} from "simple-oauth2";
-import {MastodonConfigBuilder} from "util";
+Fortunately, [Expo offers an API to allow deep linking](https://docs.expo.dev/guides/deep-linking), which requires adding a file `app.json` in the root of the project.
 
-export default async (request: VercelRequest, response: VercelResponse) => {
-  const config = MastodonConfigBuilder.build(mastodonServerUrl);
-  const client = new AuthorizationCode(config.clientConfig);
-
-  try {
-    const accessToken = await client.getToken({
-      ...client.baseConfig,
-      code: request.query.code as string,
-    });
-    response.setHeader('Content-Type', 'application/json');
-    response.end(JSON.stringify(accessToken));
-  } catch (error) {
-    console.log('Access Token Error', error.message);
-    response.end();
+```json
+// app.json
+{
+  "expo": {
+    "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "donphanmastodon",
+              "host": "oauth",
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    }
   }
-};
+}
+```
+
+Which means that Donphan is registered to open links like: `donphanmastodon://oauth`
+
+## Authorization
+
+### InApp Browser Callback
+Once the app receives the authentication token, we need to get an Authorization token.
+
+[Expo offers a React Hook](https://docs.expo.dev/guides/linking/#handling-links) to listen registered URLs, which we need to get the authentication token.
+
+`Linking.useURL()` must be used in the root component of the mobile app.
+
+```typescript
+import * as Linking from 'expo-linking';
+import { useEffect } from 'react';
+
+export default function App() {
+    const url = Linking.useURL();
+    useEffect(() => {
+     const { queryParams } = Linking.parse(url);
+     // get authentication token from queryParams
+    }, [url]);
+
+    // Rest of App component...
+}
+```
+
+### Get Authorization Token
+Once the app opens and gets the authentication token, we need to exchange that token with a **authorization token**.
+
+```typescript
+const getAuthToken = async (authToken: string) => {
+  const token = fetch(`https://auth-server.com/auth?token=${authToken}`)
+  .then((response) => response.json());
+  // store the token in App's cache
+}
 ```
