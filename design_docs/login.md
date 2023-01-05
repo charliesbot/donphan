@@ -8,6 +8,8 @@ Mastodon relies on the Fediverse, which means that every instance of the platfor
 
 Therefore, we need to know beforehand the server where the user has a Mastodon account created.
 
+![input](https://user-images.githubusercontent.com/10927770/210853176-1a6b9264-b67f-4b10-a2d4-6c340e964e46.png)
+
 ## OAuth Flow
 The OAuth process is described in the [OAuth Config for Mastodon design doc](https://github.com/charliesbot/donphan/blob/main/design_docs/oauth.md).
 
@@ -66,8 +68,8 @@ Once the OAuth flow completes, the server will call Donphan's app url.
 
 Fortunately, [Expo offers an API to allow deep linking](https://docs.expo.dev/guides/deep-linking), which requires adding a file `app.json` in the root of the project.
 
+app.json
 ```json
-// app.json
 {
   "expo": {
     "android": {
@@ -114,6 +116,8 @@ export default function App() {
     // Rest of App component...
 }
 ```
+
+![auth](https://user-images.githubusercontent.com/10927770/210853159-6bfb0141-9007-488b-b982-2b4c0818f25f.png)
 
 ### Get Authorization Token
 Once the app opens and gets the authentication token, we need to exchange that token with a **authorization token**.
