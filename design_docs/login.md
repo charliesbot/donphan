@@ -42,6 +42,13 @@ Therefore, if the user previously logged in to their Mastodon's instance using t
 Because of this data, the data access as a developer is way more limited to keep privacy and security in mind.
 This force the app to rely on deep linking to get the authorization token.
 
+```typescript
+ <Button
+    title="Open InApp Browser"
+    onPress={() => WebBrowser.openBrowserAsync('https://auth-server/oauth')}
+  />
+```
+
 | Pros ✅ | ❌ |
 |:--|:--|
 | If the user already logged in, the auth page appears immediately | No access to urls |
