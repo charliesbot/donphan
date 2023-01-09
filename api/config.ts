@@ -2,7 +2,7 @@ class MastodonConfigBuilder {
   static build = (mastodonServerUrl: string) => {
     return {
       baseConfig: {
-        redirect_uri: "urn:ietf:wg:oauth:2.0:oob",
+        redirect_uri: "donphanmastodon://oauth",
         scope: "read write follow push",
       },
       oauthConfig: {
