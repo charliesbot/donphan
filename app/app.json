@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "donphanmastodon",
     "name": "mastodon",
     "slug": "mastodon",
     "version": "1.0.0",
@@ -18,9 +19,24 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.charliesbot.donphan"
     },
     "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "donphanmastodon"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"

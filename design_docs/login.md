@@ -83,7 +83,6 @@ app.json
       "intentFilters": [
         {
           "action": "VIEW",
-          "autoVerify": true,
           "data": [
             {
               "scheme": "donphanmastodon",
