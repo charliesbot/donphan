@@ -1,8 +1,7 @@
 {
-  "name": "donphan-oauth-server",
+  "name": "donphan-monorepo",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "setup": "npx vercel login && npx vercel link",
     "start": "npx vercel dev --listen 8080",
