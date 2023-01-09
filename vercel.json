@@ -1,0 +1,11 @@
+{
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/$1",
+      "headers": {
+        "x-request-path": "$1"
+      }
+    }
+  ]
+}
